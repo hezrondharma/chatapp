@@ -1,6 +1,7 @@
+import 'package:chatapp/firebase_auth_services.dart';
 import 'package:flutter/material.dart';
 import 'main.dart';
-import 'Play_Music.dart';
+import 'friend_list.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -11,7 +12,8 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  final TextEditingController getUsername = TextEditingController();
+  final FirebaseAuthService _auth = FirebaseAuthService();
+  final TextEditingController getEmail = TextEditingController();
   final TextEditingController getPassword = TextEditingController();
 
   List<Map<String, String>> users = [];
@@ -32,7 +34,7 @@ class _LoginState extends State<Login> {
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.5,
                   child: TextField(
-                    controller: getUsername,
+                    controller: getEmail,
                     decoration: const InputDecoration(labelText: 'Username'),
                   ),
                 ),
@@ -62,7 +64,7 @@ class _LoginState extends State<Login> {
 
 
   void _userLogin(BuildContext context) async {
-    String username = getUsername.text;
+    String email = getEmail.text;
     String password = getPassword.text;
 
     DatabaseReference usersRef = FirebaseDatabase.instance.ref("users");
@@ -71,13 +73,12 @@ class _LoginState extends State<Login> {
 
     if (event.snapshot != null && event.snapshot.value != null) {
       Map<dynamic, dynamic> usersData = Map.from(event.snapshot.value as Map<dynamic, dynamic>);
+      User?user =  await _auth.signInWithEmailAndPassword(email, password);
+      // bool isUserRegistered = usersData.values.any(
+      //       (user) => user['email'] == email && user['password'] == password,
+      // );
 
-      // Cek apakah pengguna dengan username dan password tertentu ada dalam data
-      bool isUserRegistered = usersData.values.any(
-            (user) => user['username'] == username && user['password'] == password,
-      );
-
-      if (isUserRegistered) {
+      if (user != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Login berhasil'),
@@ -88,7 +89,7 @@ class _LoginState extends State<Login> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => PlayMusic(username: username),
+            builder: (context) => FriendList(email: email),
           ),
         );
       } else {
