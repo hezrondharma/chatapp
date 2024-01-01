@@ -48,7 +48,6 @@ class _FriendListState extends State<FriendList> {
   Widget build(BuildContext context) {
     List<bool> chatButtonList = List.generate(friendsList.length, (index) => false);
 
-// Inside your build method:
     return Scaffold(
       appBar: AppBar(
         title: const Text(''),
@@ -59,15 +58,15 @@ class _FriendListState extends State<FriendList> {
           },
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text('Welcome, ${widget.email}'),
-          ),
           IconButton(
             icon: const Icon(Icons.person_add),
             onPressed: () {
               _showAddFriendDialog();
             },
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text('Welcome, ${widget.email}'),
           ),
         ],
       ),
