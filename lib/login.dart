@@ -1,5 +1,7 @@
 import 'package:chatapp/firebase_auth_services.dart';
+import 'package:chatapp/landing_page.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'main.dart';
 import 'friend_list.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -12,7 +14,7 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  final FirebaseAuthService _auth = FirebaseAuthService();
+  // final FirebaseAuthService _auth = FirebaseAuthService();
   final TextEditingController getEmail = TextEditingController();
   final TextEditingController getPassword = TextEditingController();
 
@@ -62,7 +64,6 @@ class _LoginState extends State<Login> {
     );
   }
 
-
   void _userLogin(BuildContext context) async {
     String email = getEmail.text;
     String password = getPassword.text;
@@ -71,44 +72,57 @@ class _LoginState extends State<Login> {
 
     DatabaseEvent event = await usersRef.once();
 
-    if (event.snapshot != null && event.snapshot.value != null) {
-      Map<dynamic, dynamic> usersData = Map.from(event.snapshot.value as Map<dynamic, dynamic>);
-      User?user =  await _auth.signInWithEmailAndPassword(email, password);
-      // bool isUserRegistered = usersData.values.any(
-      //       (user) => user['email'] == email && user['password'] == password,
-      // );
+    final authService =
+        Provider.of<FirebaseAuthService>(context, listen: false);
 
-      if (user != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login berhasil'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => FriendList(email: email),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login gagal.'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-    } else {
-      // Handle jika data kosong atau terjadi kesalahan
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Terjadi kesalahan saat mengambil data pengguna.'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+    try {
+      await authService.signInWithEmailAndPassword(email, password);
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.toString())));
     }
-  }
 
+    Navigator.push(
+        context, MaterialPageRoute(builder: (context) => LandingPage()));
+
+    // if (event.snapshot != null && event.snapshot.value != null) {
+    //   Map<dynamic, dynamic> usersData =
+    //       Map.from(event.snapshot.value as Map<dynamic, dynamic>);
+    //   User? user = await _auth.signInWithEmailAndPassword(email, password);
+    //   // bool isUserRegistered = usersData.values.any(
+    //   //       (user) => user['email'] == email && user['password'] == password,
+    //   // );
+
+    //   if (user != null) {
+    //     ScaffoldMessenger.of(context).showSnackBar(
+    //       const SnackBar(
+    //         content: Text('Login berhasil'),
+    //         duration: Duration(seconds: 2),
+    //       ),
+    //     );
+
+    //     Navigator.push(
+    //       context,
+    //       MaterialPageRoute(
+    //         builder: (context) => FriendList(email: email),
+    //       ),
+    //     );
+    //   } else {
+    //     ScaffoldMessenger.of(context).showSnackBar(
+    //       const SnackBar(
+    //         content: Text('Login gagal.'),
+    //         duration: Duration(seconds: 2),
+    //       ),
+    //     );
+    //   }
+    // } else {
+    //   // Handle jika data kosong atau terjadi kesalahan
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(
+    //       content: Text('Terjadi kesalahan saat mengambil data pengguna.'),
+    //       duration: Duration(seconds: 2),
+    //     ),
+    //   );
+    // }
+  }
 }

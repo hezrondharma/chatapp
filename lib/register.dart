@@ -1,16 +1,21 @@
 import 'package:chatapp/firebase_auth_services.dart';
+import 'package:chatapp/landing_page.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'main.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
 class Register extends StatefulWidget {
   const Register({super.key});
 
   @override
   _RegisterState createState() => _RegisterState();
-}class _RegisterState extends State<Register> {
+}
+
+class _RegisterState extends State<Register> {
   final FirebaseAuthService _auth = FirebaseAuthService();
   final TextEditingController getEmail = TextEditingController();
   final TextEditingController getPassword = TextEditingController();
@@ -43,7 +48,8 @@ class Register extends StatefulWidget {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your email address.';
                         }
-                        if (!RegExp(r'^[\w-]+(\.[\w-]+)*@[\w-]+(\.[\w-]+)+$').hasMatch(value)) {
+                        if (!RegExp(r'^[\w-]+(\.[\w-]+)*@[\w-]+(\.[\w-]+)+$')
+                            .hasMatch(value)) {
                           return 'Please enter a valid email address.';
                         }
                         return null;
@@ -80,52 +86,64 @@ class Register extends StatefulWidget {
   }
 
   Future<void> _registerUser() async {
-    try {
-      String email = getEmail.text;
-      String password = getPassword.text;
+    // try {
+    String email = getEmail.text;
+    String password = getPassword.text;
 
-      DatabaseReference usersRef = FirebaseDatabase.instance.ref("users");
+    DatabaseReference usersRef = FirebaseDatabase.instance.ref("users");
 
-      // Check if the username already exists
-      DatabaseEvent event = await usersRef.orderByChild("email").equalTo(email).once();
-      DataSnapshot snapshot = event.snapshot;
+    // Check if the username already exists
+    DatabaseEvent event =
+        await usersRef.orderByChild("email").equalTo(email).once();
+    DataSnapshot snapshot = event.snapshot;
 
-      if (snapshot.value != null) {
-        // Username already exists, show error message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email already exists.'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      } else {
-        User?user =  await _auth.signUpWithEmailAndPassword(email, password);
-        // // Username is unique, proceed with registration
-        DatabaseReference newUserRef = usersRef.push();
-
-        await newUserRef.set({
-          "email": email,
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Registered'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-
-        Navigator.pop(context);
-      }
-    } catch (error) {
-      print("Error registering user: $error");
-
+    if (snapshot.value != null) {
+      // Username already exists, show error message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Failed to register user.'),
+          content: Text('Email already exists.'),
           duration: Duration(seconds: 2),
         ),
       );
+    } else {
+      final authService =
+          Provider.of<FirebaseAuthService>(context, listen: false);
+
+      try {
+        await authService.signUpWithEmailAndPassword(email, password);
+      } catch (e) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => LandingPage()));
+      //   User?user =  await _auth.signUpWithEmailAndPassword(email, password);
+      //   // // Username is unique, proceed with registration
+      //   DatabaseReference newUserRef = usersRef.push();
+
+      //   await newUserRef.set({
+      //     "email": email,
+      //   });
+
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     const SnackBar(
+      //       content: Text('Registered'),
+      //       duration: Duration(seconds: 2),
+      //     ),
+      //   );
+
+      //   Navigator.pop(context);
+      // }
+      // } catch (error) {
+      //   print("Error registering user: $error");
+
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     const SnackBar(
+      //       content: Text('Failed to register user.'),
+      //       duration: Duration(seconds: 2),
+      //     ),
+      //   );
     }
   }
-
 }

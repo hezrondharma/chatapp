@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:chatapp/ChatPage.dart';
+
 class FriendList extends StatefulWidget {
   final String email;
 
@@ -24,17 +25,16 @@ class _FriendListState extends State<FriendList> {
     try {
       DatabaseReference friendsRef = FirebaseDatabase.instance.ref("friends");
 
-      DatabaseEvent event = await friendsRef
-          .orderByChild("myemail")
-          .equalTo(widget.email)
-          .once();
+      DatabaseEvent event =
+          await friendsRef.orderByChild("myemail").equalTo(widget.email).once();
 
       DataSnapshot snapshot = event.snapshot;
 
       if (snapshot.value != null) {
         // Friends found, update the friendsList
         setState(() {
-          friendsList = (snapshot.value as Map<dynamic, dynamic>).values
+          friendsList = (snapshot.value as Map<dynamic, dynamic>)
+              .values
               .map<String>((friend) => friend['email'] as String)
               .toList();
         });
@@ -46,7 +46,8 @@ class _FriendListState extends State<FriendList> {
 
   @override
   Widget build(BuildContext context) {
-    List<bool> chatButtonList = List.generate(friendsList.length, (index) => false);
+    List<bool> chatButtonList =
+        List.generate(friendsList.length, (index) => false);
 
     return Scaffold(
       appBar: AppBar(
@@ -91,15 +92,19 @@ class _FriendListState extends State<FriendList> {
                                 _handleChatButtonPress(friendsList[i]);
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: chatButtonList[i] ? Colors.red : Colors.green,
-                                minimumSize: Size(MediaQuery.of(context).size.width * 0.5, 0),
+                                backgroundColor: chatButtonList[i]
+                                    ? Colors.red
+                                    : Colors.green,
+                                minimumSize: Size(
+                                    MediaQuery.of(context).size.width * 0.5, 0),
                               ),
                               child: Text('Chat'),
                             ),
                             const SizedBox(height: 8),
                             Text(
                               friendsList[i],
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 4),
                           ],
@@ -148,17 +153,19 @@ class _FriendListState extends State<FriendList> {
       },
     );
   }
+
   void _handleChatButtonPress(String friendEmail) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ChatPage(
-          myEmail: widget.email,
-          friendEmail: friendEmail,
+          receriverEmail: widget.email,
+          receiverUID: friendEmail,
         ),
       ),
     );
   }
+
   void _addFriend(String myEmail, String newEmail) async {
     try {
       if (newEmail == myEmail) {
@@ -172,9 +179,12 @@ class _FriendListState extends State<FriendList> {
       }
       DatabaseReference users = FirebaseDatabase.instance.ref("users");
       DatabaseReference friendsRef = FirebaseDatabase.instance.ref("friends");
-      DatabaseEvent emailExist = await users.orderByChild("email").equalTo(newEmail).once();
-      DatabaseEvent myemail = await friendsRef.orderByChild("myemail").equalTo(myEmail).once();
-      DatabaseEvent OtherEmail = await friendsRef.orderByChild("email").equalTo(newEmail).once();
+      DatabaseEvent emailExist =
+          await users.orderByChild("email").equalTo(newEmail).once();
+      DatabaseEvent myemail =
+          await friendsRef.orderByChild("myemail").equalTo(myEmail).once();
+      DatabaseEvent OtherEmail =
+          await friendsRef.orderByChild("email").equalTo(newEmail).once();
       DataSnapshot snapshot = myemail.snapshot;
       DataSnapshot datashot = OtherEmail.snapshot;
       DataSnapshot Exist = emailExist.snapshot;
@@ -226,5 +236,3 @@ class _FriendListState extends State<FriendList> {
     }
   }
 }
-
-

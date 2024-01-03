@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
 class ChatPage extends StatefulWidget {
-  final String myEmail;
-  final String friendEmail;
+  final String receriverEmail;
+  final String receiverUID;
 
-  const ChatPage({Key? key, required this.myEmail, required this.friendEmail})
+  const ChatPage(
+      {Key? key, required this.receriverEmail, required this.receiverUID})
       : super(key: key);
 
   @override
@@ -13,13 +14,15 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   List<String> _chatMessages = [];
+  List<Map<String, dynamic>> _messageHistory = [];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chat with ${widget.friendEmail}'),
+        title: Text('Chat with ${widget.receriverEmail}'),
       ),
       body: Column(
         children: [
@@ -63,7 +66,7 @@ class _ChatPageState extends State<ChatPage> {
     String message = _messageController.text.trim();
     if (message.isNotEmpty) {
       setState(() {
-        _chatMessages.add('${widget.myEmail}: $message');
+        _chatMessages.add('${widget.receriverEmail}: $message');
       });
       _messageController.clear();
     }
