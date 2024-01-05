@@ -1,10 +1,9 @@
 import 'package:chatapp/firebase_auth_services.dart';
-import 'package:chatapp/landing_page.dart';
+import 'package:chatapp/login.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'main.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
 
 GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -16,10 +15,8 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
-  final FirebaseAuthService _auth = FirebaseAuthService();
   final TextEditingController getEmail = TextEditingController();
   final TextEditingController getPassword = TextEditingController();
-
   List<Map<String, String>> users = [];
 
   @override
@@ -89,25 +86,20 @@ class _RegisterState extends State<Register> {
     // try {
     String email = getEmail.text;
     String password = getPassword.text;
-
-    DatabaseReference usersRef = FirebaseDatabase.instance.ref("users");
-
-    // Check if the username already exists
-    DatabaseEvent event =
-        await usersRef.orderByChild("email").equalTo(email).once();
-    DataSnapshot snapshot = event.snapshot;
-
-    if (snapshot.value != null) {
-      // Username already exists, show error message
+    if (password.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Email already exists.'),
+          content: Text('Password must be at least 6 characters long'),
           duration: Duration(seconds: 2),
         ),
       );
-    } else {
+      return;
+    }
+
+    QuerySnapshot query = await FirebaseFirestore.instance.collection('users').where('email',isEqualTo:email).get();
+    if (query.docs.length==0){
       final authService =
-          Provider.of<FirebaseAuthService>(context, listen: false);
+      Provider.of<FirebaseAuthService>(context, listen: false);
 
       try {
         await authService.signUpWithEmailAndPassword(email, password);
@@ -117,33 +109,15 @@ class _RegisterState extends State<Register> {
       }
 
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => LandingPage()));
-      //   User?user =  await _auth.signUpWithEmailAndPassword(email, password);
-      //   // // Username is unique, proceed with registration
-      //   DatabaseReference newUserRef = usersRef.push();
-
-      //   await newUserRef.set({
-      //     "email": email,
-      //   });
-
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     const SnackBar(
-      //       content: Text('Registered'),
-      //       duration: Duration(seconds: 2),
-      //     ),
-      //   );
-
-      //   Navigator.pop(context);
-      // }
-      // } catch (error) {
-      //   print("Error registering user: $error");
-
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     const SnackBar(
-      //       content: Text('Failed to register user.'),
-      //       duration: Duration(seconds: 2),
-      //     ),
-      //   );
+          context, MaterialPageRoute(builder: (context) => Login()));
+    }
+    else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Email Already Used, Try again using unique email.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
   }
 }

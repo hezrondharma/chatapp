@@ -2,10 +2,7 @@ import 'package:chatapp/firebase_auth_services.dart';
 import 'package:chatapp/landing_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'main.dart';
-import 'friend_list.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -68,61 +65,29 @@ class _LoginState extends State<Login> {
     String email = getEmail.text;
     String password = getPassword.text;
 
-    DatabaseReference usersRef = FirebaseDatabase.instance.ref("users");
-
-    DatabaseEvent event = await usersRef.once();
-
     final authService =
         Provider.of<FirebaseAuthService>(context, listen: false);
 
-    try {
-      await authService.signInWithEmailAndPassword(email, password);
-    } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.toString())));
+    QuerySnapshot query = await FirebaseFirestore.instance.collection('users')
+        .where('email', isEqualTo: email)
+        .where('password', isEqualTo: password)
+        .get();
+
+    if (query.docs.length == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Incorrect Email or Password'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      try {
+        await authService.signInWithEmailAndPassword(email, password);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+      Navigator.push(context, MaterialPageRoute(builder: (context) => LandingPage(recieved_email: email)));
+
     }
-
-    Navigator.push(
-        context, MaterialPageRoute(builder: (context) => LandingPage()));
-
-    // if (event.snapshot != null && event.snapshot.value != null) {
-    //   Map<dynamic, dynamic> usersData =
-    //       Map.from(event.snapshot.value as Map<dynamic, dynamic>);
-    //   User? user = await _auth.signInWithEmailAndPassword(email, password);
-    //   // bool isUserRegistered = usersData.values.any(
-    //   //       (user) => user['email'] == email && user['password'] == password,
-    //   // );
-
-    //   if (user != null) {
-    //     ScaffoldMessenger.of(context).showSnackBar(
-    //       const SnackBar(
-    //         content: Text('Login berhasil'),
-    //         duration: Duration(seconds: 2),
-    //       ),
-    //     );
-
-    //     Navigator.push(
-    //       context,
-    //       MaterialPageRoute(
-    //         builder: (context) => FriendList(email: email),
-    //       ),
-    //     );
-    //   } else {
-    //     ScaffoldMessenger.of(context).showSnackBar(
-    //       const SnackBar(
-    //         content: Text('Login gagal.'),
-    //         duration: Duration(seconds: 2),
-    //       ),
-    //     );
-    //   }
-    // } else {
-    //   // Handle jika data kosong atau terjadi kesalahan
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(
-    //       content: Text('Terjadi kesalahan saat mengambil data pengguna.'),
-    //       duration: Duration(seconds: 2),
-    //     ),
-    //   );
-    // }
   }
 }

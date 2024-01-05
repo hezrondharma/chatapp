@@ -15,11 +15,11 @@ class FirebaseAuthService extends ChangeNotifier {
       _fireStore
           .collection('users')
           .doc(credential.user!.uid)
-          .set({'uid': credential.user!.uid, 'email': email});
+          .set({'uid': credential.user!.uid, 'email': email, 'password': password});
 
       return credential.user;
     } catch (e) {
-      print("Some error occured");
+      print(e);
     }
   }
 
@@ -30,7 +30,7 @@ class FirebaseAuthService extends ChangeNotifier {
           email: email, password: password);
 
       _fireStore.collection('users').doc(credential.user!.uid).set(
-          {'uid': credential.user!.uid, 'email': email},
+          {'uid': credential.user!.uid, 'email': email, 'password': password},
           SetOptions(merge: true));
       return credential.user;
     } catch (e) {
