@@ -70,7 +70,7 @@ class _LandingPageState extends State<LandingPage> {
         },
       );
     } else {
-      return const Text('Nothing');
+      return const Text('');
     }
   }
 }
