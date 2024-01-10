@@ -2,6 +2,9 @@ import 'package:chatapp/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+import 'dart:convert';
 
 class ChatPage extends StatefulWidget {
   final String receriverEmail;
@@ -20,14 +23,36 @@ class _ChatPageState extends State<ChatPage> {
   final ScrollController _scrollController = ScrollController();
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final ChatService _chatService = ChatService();
+  String time = "";
 
   void sendMessage() async {
     if (_messageController.text.isNotEmpty) {
-      await _chatService.sendMessage(
-          widget.receiverUID, _messageController.text);
+      await fetchTime();
+      String temp = _messageController.text + " " + time;
+      await _chatService.sendMessage(widget.receiverUID, temp);
     }
-
     _messageController.clear();
+  }
+
+
+  Future<void> fetchTime() async {
+    try {
+      final Uri apiUrl = Uri.parse(
+          'https://timeapi.io/api/Time/current/zone?timeZone=Asia/Jakarta');
+
+      final response = await http.get(apiUrl);
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        setState(() {
+          time = data['time'];
+        });
+      } else {
+        print('Failed to load time: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error fetching time: $error');
+    }
   }
 
   @override
