@@ -52,31 +52,44 @@ class _LandingPageState extends State<LandingPage> {
   }
 
   Widget _buildUserList() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return const Text('Error');
-        }
-
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Text("Loading..");
-        }
-
-        return ListView(
-          children: snapshot.data!.docs
-              .map<Widget>((doc) =>
-              FutureBuilder<Widget>(
-                future: _buildUserListItem(doc),
-                builder: (context, userItemSnapshot) {
-                  return userItemSnapshot.data ?? const SizedBox(); // Replace with your default Widget if needed
-                },
+    return Scaffold(
+        body: Container(
+            constraints:
+                BoxConstraints.expand(), // Make the container fullscreen
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: NetworkImage(
+                    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_2sr1UdObqOX_N7MW1zzW__WcibKM4KdSmg&usqp=CAU'),
+                fit: BoxFit.cover,
               ),
-          )
-              .toList(),
-        );
-      },
-    );
+            ),
+            child: StreamBuilder<QuerySnapshot>(
+              stream:
+                  FirebaseFirestore.instance.collection('users').snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return const Text('Error');
+                }
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Text("Loading..");
+                }
+
+                return ListView(
+                  children: snapshot.data!.docs
+                      .map<Widget>(
+                        (doc) => FutureBuilder<Widget>(
+                          future: _buildUserListItem(doc),
+                          builder: (context, userItemSnapshot) {
+                            return userItemSnapshot.data ??
+                                const SizedBox(); // Replace with your default Widget if needed
+                          },
+                        ),
+                      )
+                      .toList(),
+                );
+              },
+            )));
   }
 
   Future<Widget> _buildUserListItem(DocumentSnapshot document) async {
@@ -87,10 +100,10 @@ class _LandingPageState extends State<LandingPage> {
         .where('senderEmail', isEqualTo: widget.recieved_email)
         .get();
 
-
     if (querySnapshot.docs.isNotEmpty) {
       QueryDocumentSnapshot documentSnapshot = querySnapshot.docs.first;
-      Map<String, dynamic> userData = documentSnapshot.data() as Map<String, dynamic>;
+      Map<String, dynamic> userData =
+          documentSnapshot.data() as Map<String, dynamic>;
 
       if (userData['receivedEmail'] == data['email']) {
         return ListTile(
@@ -136,7 +149,7 @@ class _LandingPageState extends State<LandingPage> {
               },
               child: const Text('Cancel'),
             ),
-            ElevatedButton (
+            ElevatedButton(
               onPressed: () async {
                 _addFriend(widget.recieved_email, newEmail);
                 await Future.delayed(Duration(seconds: 2));
@@ -152,8 +165,10 @@ class _LandingPageState extends State<LandingPage> {
       },
     );
   }
+
   void _addFriend(String senderEmail, String recievedEmail) async {
-    CollectionReference userlistCollection = FirebaseFirestore.instance.collection('userlist');
+    CollectionReference userlistCollection =
+        FirebaseFirestore.instance.collection('userlist');
 
     if (senderEmail == recievedEmail) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -162,7 +177,7 @@ class _LandingPageState extends State<LandingPage> {
           duration: Duration(seconds: 2),
         ),
       );
-    }else{
+    } else {
       QuerySnapshot recieverChecker = await FirebaseFirestore.instance
           .collection('userlist')
           .where('receivedEmail', isEqualTo: recievedEmail)
@@ -175,7 +190,7 @@ class _LandingPageState extends State<LandingPage> {
             duration: Duration(seconds: 2),
           ),
         );
-      }else{
+      } else {
         QuerySnapshot userRegistered = await FirebaseFirestore.instance
             .collection('users')
             .where('email', isEqualTo: recievedEmail)
@@ -185,7 +200,7 @@ class _LandingPageState extends State<LandingPage> {
             'senderEmail': senderEmail,
             'receivedEmail': recievedEmail,
           });
-        }else{
+        } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Email Not Registered!!!'),

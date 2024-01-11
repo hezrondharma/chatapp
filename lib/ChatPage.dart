@@ -1,3 +1,4 @@
+import 'package:chat_bubbles/bubbles/bubble_special_three.dart';
 import 'package:chatapp/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -28,12 +29,11 @@ class _ChatPageState extends State<ChatPage> {
   void sendMessage() async {
     if (_messageController.text.isNotEmpty) {
       await fetchTime();
-      String temp = _messageController.text + " " + time;
+      String temp = _messageController.text;
       await _chatService.sendMessage(widget.receiverUID, temp);
     }
     _messageController.clear();
   }
-
 
   Future<void> fetchTime() async {
     try {
@@ -47,6 +47,7 @@ class _ChatPageState extends State<ChatPage> {
         setState(() {
           time = data['time'];
         });
+        time = data['time'];
       } else {
         print('Failed to load time: ${response.statusCode}');
       }
@@ -58,16 +59,25 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.receriverEmail)),
-      body: Column(
-        children: [
-          Expanded(
-            child: _buildMessageList(),
+        appBar: AppBar(title: Text(widget.receriverEmail)),
+        body: Container(
+          constraints: BoxConstraints.expand(), // Make the container fullscreen
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: NetworkImage(
+                  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_2sr1UdObqOX_N7MW1zzW__WcibKM4KdSmg&usqp=CAU'),
+              fit: BoxFit.cover,
+            ),
           ),
-          _buildMessageInput(),
-        ],
-      ),
-    );
+          child: Column(
+            children: [
+              Expanded(
+                child: _buildMessageList(),
+              ),
+              _buildMessageInput(),
+            ],
+          ),
+        ));
   }
 
   Widget _buildMessageInput() {
@@ -91,7 +101,7 @@ class _ChatPageState extends State<ChatPage> {
         onPressed: sendMessage,
         icon: Icon(Icons.send_sharp),
         iconSize: 30,
-        color: Colors.pink,
+        color: Colors.blue,
       )
     ]);
   }
@@ -99,12 +109,14 @@ class _ChatPageState extends State<ChatPage> {
   Widget _buildMessageItem(DocumentSnapshot document) {
     Map<String, dynamic> data = document.data() as Map<String, dynamic>;
 
-    var position = (data['senderId'] == _firebaseAuth.currentUser!.uid)
-        ? Alignment.centerRight
-        : Alignment.centerLeft;
+    var position =
+        (data['senderId'] == _firebaseAuth.currentUser!.uid) ? true : false;
+
+    var color = (data['senderId'] == _firebaseAuth.currentUser!.uid)
+        ? Colors.blue
+        : Colors.orange;
 
     return Container(
-      alignment: position,
       child: Padding(
         padding: EdgeInsets.all(10),
         child: Column(
@@ -118,7 +130,14 @@ class _ChatPageState extends State<ChatPage> {
                     : MainAxisAlignment.start,
             children: [
               Text(data['senderEmail']),
-              Text(data['message']),
+              BubbleSpecialThree(
+                text: data['message'],
+                color: color,
+                tail: position,
+                isSender: position,
+                textStyle: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+              Text(data['time'].toString())
             ]),
       ),
     );
